@@ -4,6 +4,50 @@ Wolfenstein-style raycasting 3D движок на C17, SDL3, Windows/MSVC.
 
 ---
 
+## v0.2.1 — Фикс сборки: toolset, SDL3.lib, _CRT_SECURE_NO_WARNINGS
+
+### Проблема
+
+Проект не собирался из командной строки по трём причинам.
+
+**1. Несуществующий PlatformToolset `v145`**
+
+В `theDODIK3D.vcxproj` для всех четырёх конфигураций был указан `<PlatformToolset>v145</PlatformToolset>`. Тулсет `v145` не существует ни в одном официальном релизе Visual Studio. На машине установлены `v142` (14.29) и `v143` (14.34). MSBuild падал с `MSB8020: Cannot find Build Tools for v145`.
+
+**Исправление:** заменить `v145` → `v143` во всех четырёх конфигурациях.
+
+---
+
+**2. Отсутствие `lib/x64/SDL3.lib`**
+
+Директория `lib/` не была зафиксирована в репозитории. Линковщик не мог найти `SDL3.lib` (`LNK1104`). SDL3 headers присутствовали (`include/SDL3/`), DLL присутствовала в `PNGConverter/lib/`, но import library отсутствовала.
+
+**Исправление:** import library сгенерирована из `SDL3.dll` через `dumpbin.exe` + `lib.exe` (MSVC toolchain):
+```
+dumpbin /EXPORTS SDL3.dll  →  SDL3.def  →  lib /MACHINE:X64 /DEF:SDL3.def  →  SDL3.lib
+```
+SDL3.dll и сгенерированный SDL3.lib добавлены в `lib/x64/`. SDL версия: **3.4.0** (1271 экспортируемый символ).
+
+---
+
+**3. Ошибка C4996 (`fopen` treated as error)**
+
+В `SDLCheck=true` режиме MSVC превращает предупреждение C4996 о `fopen` в ошибку компилятора. Это затрагивало `assets.c` и `world.c`, где используется стандартный `fopen`. `fopen_s` — MSVC-специфичная функция (Annex K), добавлять её нецелесообразно.
+
+**Исправление:** добавить `_CRT_SECURE_NO_WARNINGS` в `PreprocessorDefinitions` всех четырёх конфигураций в `vcxproj`. Это стандартная практика для C-проектов под MSVC.
+
+---
+
+### Затронутые файлы
+
+| Файл | Изменение |
+|------|-----------|
+| `theDODIK3D.vcxproj` | `v145` → `v143`; `_CRT_SECURE_NO_WARNINGS` во все конфигурации |
+| `lib/x64/SDL3.lib` | добавлен (import library, сгенерирован из SDL3.dll 3.4.0) |
+| `lib/x64/SDL3.dll` | добавлен (скопирован из PNGConverter/lib/) |
+
+---
+
 ## v0.2 — Система анимированных текстур, рефакторинг, исправление UB
 
 ### Новый функционал: анимированные текстуры
