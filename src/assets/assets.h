@@ -5,6 +5,7 @@
 #include "utypes.h"
 
 #define ASSETS_TEXTURES_COUNT_MAX 1024
+#define ASSETS_ANIMS_COUNT_MAX    64
 #define ASSETS_PIXELFORMAT        SDL_PIXELFORMAT_ARGB8888
 #define ASSETS_EXT_TEX            ".DIHT"
 #define ASSETS_EXT_ANIM           ".DIHA"
@@ -22,12 +23,21 @@ typedef struct Texture {
     u32 pixels[];
 } Texture;
 
-typedef struct TextureAnim {
-    u32 w, h;
-    u32 index;
-    u32 frames;
-    u32 pixels[];
-} TextureAnim;
+// Animated texture: all frames stored sequentially in pixels[].
+// pixels layout: frame_count * w * h pixels, frame N starts at N*w*h.
+typedef struct AnimatedTexture {
+    u32   w, h;
+    u32   frame_count;
+    u32   current_frame;
+    float frame_duration; // seconds per frame
+    float frame_timer;    // accumulated time
+    u32   pixels[];
+} AnimatedTexture;
+
+typedef enum AnimId {
+    // Add animated texture IDs here as .DIHA assets are created
+    ANIM_COUNT
+} AnimId;
 
 typedef enum TextureId {
     TEXTURE_TILE_DEFAULT = 0,
@@ -63,15 +73,24 @@ typedef enum TextureId {
     TEXTURE_FONT_MINECRAFT,
 } TextureId;
 
-bool assets_load_texture(const char* path, TextureId tex_id);
-Texture* assets_get(TextureId id);
-u32 assets_get_size(TextureId id);
-u32 assets_get_w(TextureId id);
-u32 assets_get_h(TextureId id);
-void assets_free();
+bool            assets_load_texture(const char* path, TextureId tex_id);
+Texture*        assets_get(TextureId id);
+u32             assets_get_size(TextureId id);
+u32             assets_get_w(TextureId id);
+u32             assets_get_h(TextureId id);
 
-Texture* assets_font_get(TextureId id);
+bool            assets_load_anim(const char* path, AnimId id, float frame_duration);
+AnimatedTexture* assets_anim_get(AnimId id);
+void            assets_update(float dt); // advance all animation timers
+
+void            assets_free();
+
 FontChar assets_font_char(Texture* texture, char ch);
+
+static inline Texture* assets_font_get(TextureId id)
+{
+    return assets_get(id);
+}
 
 static inline int assets_font_index(char c)
 {

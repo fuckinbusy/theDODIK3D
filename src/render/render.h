@@ -16,6 +16,7 @@ typedef struct Player Player;
 typedef struct World World;
 typedef struct GameState GameState;
 typedef enum TextureId TextureId;
+typedef enum AnimId AnimId;
 
 typedef struct FrameBuffer {
     u32 w, h, size;
@@ -29,8 +30,9 @@ void render_free();
 void render_player(Player *player);
 void render_update(GameState* gs, int fov);
 void render_present();
-u32 render_apply_shade(u32 color, float shade);
+u32  render_apply_shade(u32 color, float shade);
 void render_draw_texture(int x_start, int y_start, int w, int h, TextureId tex_id, bool mirrored);
+void render_draw_anim(int x_start, int y_start, int w, int h, AnimId anim_id, bool mirrored);
 void render_draw_font(Vec2 start, int screen_w, int screen_h, int size, u32 color, TextureId tex_id, const char* str);
 
 static inline void render_clear()
@@ -50,7 +52,9 @@ static inline void render_buffer_put_pixel(u32 x, u32 y, u32 color)
 }
 static inline u32 render_color(u8 r, u8 g, u8 b, u8 a)
 {
-    return (a << 24) | (r << 16) | (g << 8) | b;
+    // Cast to u32 before shifting: u8 promotes to signed int,
+    // and shifting into the sign bit is UB in C.
+    return ((u32)a << 24) | ((u32)r << 16) | ((u32)g << 8) | (u32)b;
 }
 
 #endif // _RENDER_H

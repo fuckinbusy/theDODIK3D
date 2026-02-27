@@ -3,7 +3,8 @@
 #include <ctype.h>
 #include "assets.h"
 
-static Texture* textures[ASSETS_TEXTURES_COUNT_MAX];
+static Texture*         textures[ASSETS_TEXTURES_COUNT_MAX];
+static AnimatedTexture* anims[ASSETS_ANIMS_COUNT_MAX];
 static u32 textures_counter = 0;
 
 static bool assets_add(Texture *texture, TextureId id)
@@ -35,8 +36,10 @@ bool assets_load_texture(const char* path, TextureId tex_id)
         return false;
     }
 
-    if (w == 0 || h == 0)
+    if (w == 0 || h == 0) {
+        fclose(f);
         return false;
+    }
 
     size_t pixels_size = w * h * sizeof(u32);
     size_t struct_size = sizeof(Texture) + pixels_size;
@@ -101,20 +104,98 @@ u32 assets_get_h(TextureId id)
 
 void assets_free()
 {
-    for (int i = 0; i < textures_counter; ++i) {
+    // Iterate the full range — textures are indexed by TextureId, not by insertion order.
+    for (int i = 0; i < ASSETS_TEXTURES_COUNT_MAX; ++i) {
         if (textures[i]) {
             free(textures[i]);
             textures[i] = NULL;
+        }
+    }
+    for (int i = 0; i < ASSETS_ANIMS_COUNT_MAX; ++i) {
+        if (anims[i]) {
+            free(anims[i]);
+            anims[i] = NULL;
         }
     }
 
     textures_counter = 0;
 }
 
-Texture* assets_font_get(TextureId id)
+bool assets_load_anim(const char* path, AnimId id, float frame_duration)
 {
-    Texture* font = assets_get(id);
-    return font ? font : NULL;
+    if (!path) return false;
+    if (id < 0 || id >= ASSETS_ANIMS_COUNT_MAX) return false;
+
+    FILE* f = fopen(path, "rb");
+    if (!f) {
+        SDL_Log("Failed to open animation file `%s`", path);
+        return false;
+    }
+
+    u32 w = 0, h = 0, frame_count = 0;
+
+    if (fread(&w,           sizeof(u32), 1, f) != 1 ||
+        fread(&h,           sizeof(u32), 1, f) != 1 ||
+        fread(&frame_count, sizeof(u32), 1, f) != 1) {
+        fclose(f);
+        SDL_Log("Failed to read animation header `%s` (Wrong format or file corrupted)", path);
+        return false;
+    }
+
+    if (w == 0 || h == 0 || frame_count == 0) {
+        fclose(f);
+        SDL_Log("Invalid animation dimensions in `%s`", path);
+        return false;
+    }
+
+    size_t frame_pixels = (size_t)w * h;
+    size_t pixels_size  = frame_pixels * frame_count * sizeof(u32);
+    AnimatedTexture* anim = (AnimatedTexture*)malloc(sizeof(AnimatedTexture) + pixels_size);
+    if (!anim) {
+        fclose(f);
+        return false;
+    }
+
+    anim->w              = w;
+    anim->h              = h;
+    anim->frame_count    = frame_count;
+    anim->current_frame  = 0;
+    anim->frame_duration = frame_duration;
+    anim->frame_timer    = 0.0f;
+
+    if (fread(anim->pixels, sizeof(u32), frame_pixels * frame_count, f) != frame_pixels * frame_count) {
+        fclose(f);
+        free(anim);
+        SDL_Log("Failed to read animation pixels `%s`", path);
+        return false;
+    }
+
+    anims[id] = anim;
+    fclose(f);
+    SDL_Log("Animation loaded %-*s %ux%u x%u frames", 55, path, w, h, frame_count);
+    return true;
+}
+
+AnimatedTexture* assets_anim_get(AnimId id)
+{
+    if (id < 0 || id >= ASSETS_ANIMS_COUNT_MAX)
+        return NULL;
+
+    return anims[id];
+}
+
+void assets_update(float dt)
+{
+    for (int i = 0; i < ASSETS_ANIMS_COUNT_MAX; ++i) {
+        AnimatedTexture* anim = anims[i];
+        if (!anim) continue;
+
+        anim->frame_timer += dt;
+        if (anim->frame_timer >= anim->frame_duration) {
+            anim->frame_timer  -= anim->frame_duration;
+            anim->current_frame = (anim->current_frame + 1) % anim->frame_count;
+        }
+    }
 }
 
 FontChar assets_font_char(Texture* font, char c)

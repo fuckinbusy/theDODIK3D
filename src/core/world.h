@@ -55,51 +55,29 @@ void world_free();
 
 static inline WorldTile *world_tile(World* world, int tile_x, int tile_y)
 {
-    if (world == NULL ||
-        tile_x >= world->w ||
-        tile_y >= world->h ||
-        tile_x < 0 ||
-        tile_y < 0) return 0;
+    if (world == NULL  ||
+        tile_x < 0     || tile_x >= (int)world->w ||
+        tile_y < 0     || tile_y >= (int)world->h)
+        return NULL;
 
     return &world->map[tile_y * world->w + tile_x];
 }
 
 static inline u32 world_tile_type(World* world, int tile_x, int tile_y)
 {
-    if (world == NULL ||
-        tile_x >= world->w ||
-        tile_y >= world->h ||
-        tile_x < 0 ||
-        tile_y < 0) return 0;
-
     WorldTile *tile = world_tile(world, tile_x, tile_y);
-
     return tile ? tile->type : 0;
 }
 
 static inline u32 world_tile_texture(World* world, int tile_x, int tile_y)
 {
-    if (world == NULL      ||
-        tile_x >= world->w || 
-        tile_y >= world->h || 
-        tile_x < 0         || 
-        tile_y < 0) return 0;
-
     WorldTile *tile = world_tile(world, tile_x, tile_y);
-
     return tile ? world_palette_coltotex(tile->color) : 0;
 }
 
 static inline u32 world_tile_color(World* world, int tile_x, int tile_y)
 {
-    if (world == NULL ||
-        tile_x >= world->w ||
-        tile_y >= world->h ||
-        tile_x < 0 ||
-        tile_y < 0) return 0;
-
     WorldTile *tile = world_tile(world, tile_x, tile_y);
-
     return tile ? tile->color : 0;
 }
 

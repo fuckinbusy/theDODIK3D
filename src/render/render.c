@@ -244,26 +244,61 @@ u32 render_apply_shade(u32 color, float shade)
 void render_draw_texture(int x_start, int y_start, int w, int h, TextureId tex_id, bool mirrored)
 {
     Texture* texture = assets_get(tex_id);
+    if (!texture) return;
 
     float tex_step_x = (float)texture->w / w;
     if (mirrored) tex_step_x = -tex_step_x;
     float tex_step_y = (float)texture->h / h;
 
-    float tex_pos_y = 0;
+    float tex_pos_y = 0.0f;
 
     for (int y = y_start; y < y_start + h; ++y) {
         int tex_y = (int)tex_pos_y;
-        float tex_pos_x = 0;
-        if (mirrored) tex_pos_x = texture->w - 1;
+        if (tex_y < 0) tex_y = 0;
+        if (tex_y >= (int)texture->h) tex_y = (int)texture->h - 1;
+
+        float tex_pos_x = mirrored ? (float)(texture->w - 1) : 0.0f;
         for (int x = x_start; x < x_start + w; ++x) {
             int tex_x = (int)tex_pos_x;
+            if (tex_x < 0) tex_x = 0;
+            if (tex_x >= (int)texture->w) tex_x = (int)texture->w - 1;
+
             u32 color = texture->pixels[tex_y * texture->w + tex_x];
-            u32 alpha = (color >> 24) & 0xFF;
-            if (alpha == 0x00) {
-                tex_pos_x += tex_step_x;
-                continue;
-            }
-            render_buffer_put_pixel(x, y, color);
+            if ((color >> 24) & 0xFF)
+                render_buffer_put_pixel(x, y, color);
+            tex_pos_x += tex_step_x;
+        }
+        tex_pos_y += tex_step_y;
+    }
+}
+
+void render_draw_anim(int x_start, int y_start, int w, int h, AnimId anim_id, bool mirrored)
+{
+    AnimatedTexture* anim = assets_anim_get(anim_id);
+    if (!anim) return;
+
+    const u32* frame_pixels = &anim->pixels[anim->current_frame * anim->w * anim->h];
+
+    float tex_step_x = (float)anim->w / w;
+    if (mirrored) tex_step_x = -tex_step_x;
+    float tex_step_y = (float)anim->h / h;
+
+    float tex_pos_y = 0.0f;
+
+    for (int y = y_start; y < y_start + h; ++y) {
+        int tex_y = (int)tex_pos_y;
+        if (tex_y < 0) tex_y = 0;
+        if (tex_y >= (int)anim->h) tex_y = (int)anim->h - 1;
+
+        float tex_pos_x = mirrored ? (float)(anim->w - 1) : 0.0f;
+        for (int x = x_start; x < x_start + w; ++x) {
+            int tex_x = (int)tex_pos_x;
+            if (tex_x < 0) tex_x = 0;
+            if (tex_x >= (int)anim->w) tex_x = (int)anim->w - 1;
+
+            u32 color = frame_pixels[tex_y * anim->w + tex_x];
+            if ((color >> 24) & 0xFF)
+                render_buffer_put_pixel(x, y, color);
             tex_pos_x += tex_step_x;
         }
         tex_pos_y += tex_step_y;

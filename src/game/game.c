@@ -91,6 +91,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 
     render_clear();
         gtimer_update(timer);
+        assets_update(timer->delta_scaled);
         world_update(current_world, timer->delta_scaled);
         player_update(&game_state, timer->delta_scaled);
         entity_pool_update(entities, timer->delta_scaled);

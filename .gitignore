@@ -3,6 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Build output (game executable + copied assets/DLLs)
+/game/
+
+# CLion / JetBrains IDE
+.idea/
+
 # User-specific files
 *.rsuser
 *.suo
