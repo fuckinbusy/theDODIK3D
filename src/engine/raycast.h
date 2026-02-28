@@ -1,7 +1,7 @@
 #ifndef _RAYCAST_H
 #define _RAYCAST_H
 
-#include "math/gmath_types.h"
+#include "math/gmath.h"
 
 typedef struct RayResult {
     float x, y;

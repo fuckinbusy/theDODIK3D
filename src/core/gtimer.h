@@ -14,7 +14,6 @@ typedef struct GameTimer {
 	u32 delta_ms_raw;
 	u32 delta_ms_scaled;
 	u16 fps;
-	u16 frames_passed_sec;
 	u16 fps_timer;
 	u64 counter;
 	u64 frequency;

@@ -312,9 +312,6 @@
     <ClInclude Include="src\ui\ui_dodik.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\math\gmath_types.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="src\math\gmath.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>

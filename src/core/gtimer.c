@@ -15,6 +15,7 @@ GameTimer* gtimer_init()
 
     timer->frequency = SDL_GetPerformanceFrequency();
     timer->time_scale = GTIMER_TIME_SCALE_DEFAULT;
+    timer->fps = 666;
 
     SDL_Log("Game timer initialized (fucking cool yo)");
     return timer;
@@ -44,11 +45,9 @@ void gtimer_update(GameTimer* timer)
     timer->delta_scaled = (float)scaled;
     timer->delta_ms_scaled = (u32)(scaled * 1000.0);
 
-    timer->frames_passed_sec++;
     timer->fps_timer += timer->delta_ms_raw;
-    if (timer->fps_timer >= 1000) {
-        timer->fps = timer->frames_passed_sec;
-        timer->frames_passed_sec = 0;
+    if (timer->fps_timer >= 250) {
+        timer->fps = (u16)(1.0 / raw);
         timer->fps_timer = 0;
     }
 }

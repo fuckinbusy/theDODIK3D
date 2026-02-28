@@ -60,11 +60,15 @@ static void render_draw_entities(GameState* gs, Vec2 camera_plane, float proj_di
     if (!gs) return;
 
     EntityPool* pool = gs->entities;
-    Player* player = &gs->player;
     if (!pool || pool->size == 0) return;
+    Player* player = &gs->player;
 
     for (int i = 0; i < pool->size; ++i) {
         Entity* ent = &pool->entities[i];
+        if (!ent) continue;
+
+        Texture* texture = assets_get(TEXTURE_ENTITY_ENEMY);
+        if (!texture) continue;
 
         Vec2 d = gmath_vec2_sub(ent->pos, player->pos);
         Vec2 dir = gmath_direction(player->angle);
@@ -72,30 +76,48 @@ static void render_draw_entities(GameState* gs, Vec2 camera_plane, float proj_di
         float inv_det = 1.0f / (camera_plane.x * dir.y - dir.x * camera_plane.y);
         float transform_x = inv_det * (d.x * dir.y - d.y * dir.x);
         float transform_y = inv_det * (-camera_plane.y * d.x + d.y * camera_plane.x);
-        if (transform_y < 0.85f) continue;
+        if (transform_y < 0.85f * gs->zoom) continue;
 
         float shade = 1.0f / (transform_y + 1.5f);
         float inv_ty = 1.0f / transform_y;
-        
+
         int screen_x = (int)((gs->game_w * 0.5f) * (1.0f + transform_x * inv_ty));
-        int sprite_h = (int)fabsf(proj_dist * inv_ty);
+        int sprite_h = (int)fabsf(proj_dist * inv_ty * 0.9f);
         int sprite_w = sprite_h;
+        int sprite_center = (int)(gs->game_h * 0.5f + proj_dist * inv_ty * 0.1f);
+
+        float tex_step_x = (float)texture->w / sprite_w;
+        float tex_step_y = (float)texture->h / sprite_h;
 
         int start_x = screen_x - sprite_w * 0.5f;
         int stop_x = screen_x + sprite_w * 0.5f;
-        int start_y = gs->game_h * 0.5f - sprite_h * 0.5f;
-        int stop_y = gs->game_h * 0.5f + sprite_h * 0.5f;
+        int start_y = sprite_center - sprite_h * 0.5f;
+        int stop_y = sprite_center + sprite_h * 0.5f;
+
+        int draw_start_x = start_x;
+        int draw_start_y = start_y;
 
         if (start_x < 0) start_x = 0;
-        if (start_x >= stop_x)
-            continue;
+        if (start_y < 0) start_y = 0;
 
+        float tex_pos_y = (start_y - draw_start_y) * tex_step_y;
         for (int y = start_y; y < stop_y; ++y) {
+            if (y >= gs->game_h) break;
+            int tex_y = (int)gmath_clamp(tex_pos_y, 0.0f, (float)(texture->h - 1));
+
+            float tex_pos_x = (start_x - draw_start_x) * tex_step_x;
             for (int x = start_x; x < stop_x; ++x) {
+                if (x >= gs->game_w) break;
+                int tex_x = (int)gmath_clamp(tex_pos_x, 0.0f, (float)(texture->w - 1));
+                u32 color = texture->pixels[tex_y * texture->w + tex_x];
+
                 if (transform_y < zbuffer[x]) {
-                    render_buffer_put_pixel(x, y, render_apply_shade(RENDER_COLOR_RED, shade));
+                    if ((color >> 24) & 0xFF)
+                        render_buffer_put_pixel(x, y, render_apply_shade(color, shade));
                 }
+                tex_pos_x += tex_step_x;
             }
+            tex_pos_y += tex_step_y;
         }
     }
 }
@@ -227,7 +249,7 @@ void render_present()
 
 u32 render_apply_shade(u32 color, float shade)
 {
-    shade = gmath_clamp(shade, 0, 1);
+    shade = gmath_clamp(shade, 0.0f, 1.0f);
 
     u8 a = (color >> 24) & 0xFF;
     u8 r = (color >> 16) & 0xFF;
@@ -244,26 +266,24 @@ u32 render_apply_shade(u32 color, float shade)
 void render_draw_texture(int x_start, int y_start, int w, int h, TextureId tex_id, bool mirrored)
 {
     Texture* texture = assets_get(tex_id);
+    if (!texture) return;
 
     float tex_step_x = (float)texture->w / w;
-    if (mirrored) tex_step_x = -tex_step_x;
     float tex_step_y = (float)texture->h / h;
+    if (mirrored) tex_step_x = -tex_step_x;
 
-    float tex_pos_y = 0;
+    float tex_pos_y = 0.0f;
 
     for (int y = y_start; y < y_start + h; ++y) {
-        int tex_y = (int)tex_pos_y;
-        float tex_pos_x = 0;
-        if (mirrored) tex_pos_x = texture->w - 1;
+        int tex_y = (int)gmath_clamp(tex_pos_y, 0.0f, (float)(texture->h - 1));
+
+        float tex_pos_x = mirrored ? (float)(texture->w - 1) : 0.0f;
         for (int x = x_start; x < x_start + w; ++x) {
-            int tex_x = (int)tex_pos_x;
+            int tex_x = (int)gmath_clamp(tex_pos_x, 0.0f, (float)(texture->w - 1));
+
             u32 color = texture->pixels[tex_y * texture->w + tex_x];
-            u32 alpha = (color >> 24) & 0xFF;
-            if (alpha == 0x00) {
-                tex_pos_x += tex_step_x;
-                continue;
-            }
-            render_buffer_put_pixel(x, y, color);
+            if ((color >> 24) & 0xFF) // alpha skip
+                render_buffer_put_pixel(x, y, color);
             tex_pos_x += tex_step_x;
         }
         tex_pos_y += tex_step_y;
@@ -274,7 +294,7 @@ void render_draw_font(Vec2 start, int screen_w, int screen_h, int size, u32 colo
 {
     if (!str) return;
 
-    Texture* font = assets_font_get(tex_id);
+    Texture* font = assets_get(tex_id);
     if (!font) {
         SDL_Log("Font is NULL");
         return;
@@ -316,14 +336,9 @@ void render_draw_font(Vec2 start, int screen_w, int screen_h, int size, u32 colo
                 if (x >= screen_w) { break; }
 
                 int font_x = (int)font_pos_x;
-                u32 pixel = font_char.pixels[font_y * font_char.stride + font_x];
-                u32 alpha = (pixel >> 24) & 0xFF;
-                if (alpha == 0) {
-                    font_pos_x += font_step_x;
-                    continue;
-                }
-
-                render_buffer_put_pixel(x, y, color);
+                u32 pixel = font_char.pixels[font_y * font_char.stride + font_x]; 
+                if ((pixel >> 24) & 0xFF) 
+                    render_buffer_put_pixel(x, y, color);
                 font_pos_x += font_step_x;
             }
 

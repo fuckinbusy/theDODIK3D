@@ -6,6 +6,7 @@
 
 static void entity_update(Entity* entity, float dt)
 {
+	if (!entity) return;
 	if (!entity->is_alive) return;
 
 	if (entity->angle < 0) 
@@ -13,19 +14,19 @@ static void entity_update(Entity* entity, float dt)
 	if (entity->angle >= 2 * MATH_PI) 
 		entity->angle -= 2 * MATH_PI;
 
+	Vec2 dir = gmath_direction(entity->angle);
+
 	if (entity->is_moving) {
-		Vec2 dir = gmath_direction(entity->angle);
 		Vec2 move = { 0 };
 
 		move.x += dir.x;
 		move.y += dir.y;
 
-		move.x -= dir.x;
-		move.y -= dir.y;
-
 		move = gmath_vec2_norm(move);
+		move.x *= entity->velocity * dt;
+		move.y *= entity->velocity * dt;
 
-		entity->pos = move;
+		entity->pos = gmath_vec2_add(entity->pos, move);
 	}
 }
 

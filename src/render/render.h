@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include "SDL3/SDL.h"
 #include "utypes.h"
-#include "math/gmath_types.h"
 
 #define RENDER_COLOR_BLACK (u32)0xFF000000
 #define RENDER_COLOR_WHITE (u32)0xFFFFFFFF
@@ -15,6 +14,7 @@
 typedef struct Player Player;
 typedef struct World World;
 typedef struct GameState GameState;
+typedef struct Vec2 Vec2;
 typedef enum TextureId TextureId;
 
 typedef struct FrameBuffer {
@@ -50,7 +50,7 @@ static inline void render_buffer_put_pixel(u32 x, u32 y, u32 color)
 }
 static inline u32 render_color(u8 r, u8 g, u8 b, u8 a)
 {
-    return (a << 24) | (r << 16) | (g << 8) | b;
+    return ((u32)a << 24) | ((u32)r << 16) | ((u32)g << 8) | (u32)b;
 }
 
 #endif // _RENDER_H

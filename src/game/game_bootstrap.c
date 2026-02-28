@@ -73,34 +73,9 @@ bool game_load_assets()
         SDL_Log("Failed to load default texture. Game closed");
         return false;
     }
-    assets_load_texture("assets/textures/tiles/soul_sand_32"ASSETS_EXT_TEX, TEXTURE_TILE_SAND);
-    assets_load_texture("assets/textures/tiles/markaryan_64"ASSETS_EXT_TEX, TEXTURE_TILE_MARKARYAN);
-    assets_load_texture("assets/textures/tiles/bricks_128"ASSETS_EXT_TEX, TEXTURE_TILE_BRICKS);
-    assets_load_texture("assets/textures/tiles/bricks_secret_128"ASSETS_EXT_TEX, TEXTURE_TILE_BRICKS_SECRET);
-    assets_load_texture("assets/textures/tiles/door_128"ASSETS_EXT_TEX, TEXTURE_TILE_DOOR);
-
-    assets_load_texture("assets/textures/ui/bg/bg2"ASSETS_EXT_TEX, TEXTURE_UI_BACKGROUND);
-    assets_load_texture("assets/textures/ui/dodik/angry"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_ANGRY);
-    assets_load_texture("assets/textures/ui/dodik/angry_hit"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_ANGRY_HIT);
-    assets_load_texture("assets/textures/ui/dodik/dead"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_DEAD);
-    assets_load_texture("assets/textures/ui/dodik/fucku"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_FUCKU);
-    assets_load_texture("assets/textures/ui/dodik/gray"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_GRAY);
-    assets_load_texture("assets/textures/ui/dodik/holy"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_HOLY);
-    assets_load_texture("assets/textures/ui/dodik/idle"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_IDLE);
-    assets_load_texture("assets/textures/ui/dodik/idle_hit"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_IDLE_HIT);
-    assets_load_texture("assets/textures/ui/dodik/sad"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_SAD);
-    assets_load_texture("assets/textures/ui/dodik/sad_hit"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_SAD_HIT);
-    assets_load_texture("assets/textures/ui/dodik/side_look"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_SIDE_LOOK);
-    assets_load_texture("assets/textures/ui/dodik/side_look_hit"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_SIDE_LOOK_HIT);
-    assets_load_texture("assets/textures/ui/dodik/side_look_angry"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_SIDE_LOOK_ANGRY);
-    assets_load_texture("assets/textures/ui/dodik/side_look_angry_hit"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_SIDE_LOOK_ANGRY_HIT);
-    assets_load_texture("assets/textures/ui/dodik/wow"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_WOW);
-    assets_load_texture("assets/textures/ui/dodik/wow_hit"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_WOW_HIT);
-    assets_load_texture("assets/textures/ui/dodik/frame"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_FRAME);
-    assets_load_texture("assets/textures/ui/dodik/gun_test"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_GUN_TEST);
-    assets_load_texture("assets/textures/ui/dodik/hand_test2"ASSETS_EXT_TEX, TEXTURE_UI_DODIK_HAND_TEST);
-    assets_load_texture("assets/textures/font/default"ASSETS_EXT_TEX, TEXTURE_FONT_DEFAULT);
-    assets_load_texture("assets/textures/font/minecraft"ASSETS_EXT_TEX, TEXTURE_FONT_MINECRAFT);
+    assets_load_texmap("assets/textures/tiles"ASSETS_EXT_TEX, TEXTURE_MAP_TILES, TEXTURE_SIZE_128);
+    assets_load_texmap("assets/textures/dodik"ASSETS_EXT_TEX, TEXTURE_MAP_DODIK, TEXTURE_SIZE_128);
+    // todo
 
     return true;
 }

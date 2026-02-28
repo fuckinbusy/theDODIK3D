@@ -2,11 +2,10 @@
 #define _CORE_ENTITY_H
 #include <stdbool.h>
 #include "utypes.h"
-#include "math/gmath_types.h"
 #include "math/gmath.h"
 
 #define ENTITIES_MAX 20
-#define ENTITY_VELOCITY 3.0f
+#define ENTITY_VELOCITY 1.5f
 
 typedef enum EntityType {
 	ENTITY_TEST_0 = 100,
@@ -36,7 +35,6 @@ typedef struct EntityPool {
 	u32 size;
 } EntityPool;
 
-
 static inline Entity entity_create(Vec2 pos, Vec2 dir, u32 health, EntityType type)
 {
 	Entity ent = { 0 };
@@ -46,6 +44,7 @@ static inline Entity entity_create(Vec2 pos, Vec2 dir, u32 health, EntityType ty
 	ent.health = health;
 	ent.velocity = ENTITY_VELOCITY;
 	ent.rot_velocity = ENTITY_VELOCITY;
+	ent.is_alive = health > 0 ? true : false;
 	return ent;
 }
 

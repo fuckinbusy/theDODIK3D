@@ -3,20 +3,20 @@
 #include <ctype.h>
 #include "assets.h"
 
-static Texture* textures[ASSETS_TEXTURES_COUNT_MAX];
-static u32 textures_counter = 0;
+TextureMap* map_buffer[ASSETS_TEXTUREMAPS_MAX] = {0};
+static u32 map_counter = 0;
 
-static bool assets_add(Texture *texture, TextureId id)
+static bool assets_add(TextureMap* texture_map, TextureMapId mid)
 {
-    textures[id] = texture;
-    textures_counter++;
+    map_buffer[mid] = texture_map;
+    map_counter++;
     return true;
 }
 
-bool assets_load_texture(const char* path, TextureId tex_id)
+bool assets_load_texmap(const char* path, TextureMapId map_id, u32 texture_size)
 {
     if (!path) return false;
-    if (tex_id < 0 || tex_id >= ASSETS_TEXTURES_COUNT_MAX) 
+    if (map_id < 0 || map_id >= ASSETS_TEXTURES_MAX)
         return false;
 
     FILE* f = fopen(path, "rb");
@@ -30,91 +30,49 @@ bool assets_load_texture(const char* path, TextureId tex_id)
 
     if (fread(&w, sizeof(u32), 1, f) != 1||
         fread(&h, sizeof(u32), 1, f) != 1) {
-        fclose(f);
         SDL_Log("Failed to read file `%s` (Wrong format or file corrupted)", path);
-        return false;
+        goto exit_failure;
     }
 
-    if (w == 0 || h == 0)
-        return false;
+    if (w == 0 || h == 0) goto exit_failure;
 
     size_t pixels_size = w * h * sizeof(u32);
-    size_t struct_size = sizeof(Texture) + pixels_size;
+    size_t struct_size = sizeof(TextureMap) + pixels_size;
 
-    Texture* texture = (Texture*)malloc(struct_size);
+    TextureMap* map = (TextureMap*)malloc(struct_size);
+    if (!map) goto exit_failure;
 
-    if (!texture) {
-        fclose(f);
-        return false;
-    }
+    map->w = w;
+    map->h = h;
+    map->texture_size = texture_size;
 
-    texture->w = w;
-    texture->h = h;
-
-    size_t read = fread(texture->pixels, sizeof(u8), pixels_size, f);
+    size_t read = fread(map->pixels, sizeof(u8), pixels_size, f);
 
     if (read != pixels_size) {
-        fclose(f);
-        free(texture);
+        free(map);
         SDL_Log("Failed to read that DIH `%s`", path);
-        return false;
+        goto exit_failure;
     }
 
-    if (!assets_add(texture, tex_id)) {
-        fclose(f);
-        free(texture);
+    if (!assets_add(map, map_id)) {
+        free(map);
         SDL_Log("Failed to load texture `%s` (Textures buffer full)", path);
-        return false;
+        goto exit_failure;
     }
 
     fclose(f);
     SDL_Log("Texture loaded %-*s %ux%u", 55, path, w, h);
     return true;
  
-}
-
-Texture* assets_get(TextureId id)
-{
-    if (id < 0 || id >= ASSETS_TEXTURES_COUNT_MAX) 
-        return NULL;
-
-    return textures[id];
-}
-
-u32 assets_get_size(TextureId id)
-{
-    Texture* tex = assets_get(id);
-    return tex ? tex->w * tex->h : 0;
-}
-
-u32 assets_get_w(TextureId id)
-{
-    Texture* tex = assets_get(id);
-    return tex ? tex->w : 0;
-}
-
-u32 assets_get_h(TextureId id)
-{
-    Texture* tex = assets_get(id);
-    return tex ? tex->h : 0;
+exit_failure:
+    fclose(f);
+    return false;
 }
 
 void assets_free()
 {
-    for (int i = 0; i < textures_counter; ++i) {
-        if (textures[i]) {
-            free(textures[i]);
-            textures[i] = NULL;
-        }
-    }
-
-    textures_counter = 0;
-}
-
-Texture* assets_font_get(TextureId id)
-{
-    Texture* font = assets_get(id);
-    return font ? font : NULL;
+    for (int i = 0; i < ASSETS_TEXTUREMAPS_MAX; ++i)
+        if (map_buffer[i]) { free(map_buffer[i]); map_buffer[i] = NULL; }
 }
 
 FontChar assets_font_char(Texture* font, char c)
@@ -132,10 +90,10 @@ FontChar assets_font_char(Texture* font, char c)
     u32 x = col * ASSETS_FONT_CHAR_SIZE;
     u32 y = row * ASSETS_FONT_CHAR_SIZE;
 
-    fc.pixels = &font->pixels[y * font->w + x];
+    fc.pixels = &font->pixels[y * font->size + x];
     fc.w = ASSETS_FONT_CHAR_SIZE;
     fc.h = ASSETS_FONT_CHAR_SIZE;
-    fc.stride = font->w;
+    fc.stride = font->size;
 
     return fc;
 }
