@@ -73,8 +73,9 @@ bool game_load_assets()
         SDL_Log("Failed to load default texture. Game closed");
         return false;
     }
-    assets_load_texmap("assets/textures/tiles"ASSETS_EXT_TEX, TEXTURE_MAP_TILES, TEXTURE_SIZE_128);
-    assets_load_texmap("assets/textures/dodik"ASSETS_EXT_TEX, TEXTURE_MAP_DODIK, TEXTURE_SIZE_128);
+    assets_load_texmap("assets/textures/tiles"ASSETS_EXT_TEX, TEXTURE_MAP_TILES, 128, 128);
+    assets_load_texmap("assets/textures/dodik"ASSETS_EXT_TEX, TEXTURE_MAP_DODIK, 64, 64);
+    assets_load_texmap("assets/textures/weapon"ASSETS_EXT_TEX, TEXTURE_MAP_WEAPON, 128, 128);
     // todo
 
     return true;
