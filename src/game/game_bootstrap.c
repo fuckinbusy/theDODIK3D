@@ -71,11 +71,12 @@ bool game_load_assets()
     assets_load_texmap("assets/textures/tiles"  ASSETS_EXT_TEX, TEXTURE_MAP_TILES);
     assets_load_texmap("assets/textures/dodik"  ASSETS_EXT_TEX, TEXTURE_MAP_DODIK);
     assets_load_texmap("assets/textures/weapon" ASSETS_EXT_TEX, TEXTURE_MAP_WEAPON);
+    assets_load_texmap("assets/textures/ui"     ASSETS_EXT_TEX, TEXTURE_MAP_UI);
     assets_load_texmap("assets/textures/entity" ASSETS_EXT_TEX, TEXTURE_MAP_ENEMY);
 
-    /* Шрифтовые битмапы */
-    assets_load_fontmap("assets/textures/font/default"   ASSETS_EXT_TEX, FONT_MAP_DEFAULT);
-    assets_load_fontmap("assets/textures/font/minecraft" ASSETS_EXT_TEX, FONT_MAP_MINECRAFT);
+    /* Шрифтовые битмапы (упакованные через tools/pack_texmap.py) */
+    assets_load_fontmap("assets/textures/font/default_texmap"   ASSETS_EXT_TEX, FONT_MAP_DEFAULT);
+    assets_load_fontmap("assets/textures/font/minecraft_texmap" ASSETS_EXT_TEX, FONT_MAP_MINECRAFT);
 
     return true;
 }
