@@ -18,6 +18,9 @@
     <ClInclude Include="src\assets\assets.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="src\assets\font.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
     <ClInclude Include="src\core\input.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -327,6 +330,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\assets\assets.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="src\assets\font.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="src\core\player.c">

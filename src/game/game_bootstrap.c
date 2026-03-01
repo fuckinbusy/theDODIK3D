@@ -1,6 +1,7 @@
 #include <string.h>
 #include "game_systems.h"
 #include "assets/assets.h"
+#include "assets/font.h"
 #include "game_state.h"
 #include "core/world.h"
 #include "render/render.h"
@@ -8,11 +9,10 @@
 #include "core/gtimer.h"
 #include "core/entity.h"
 
-void game_relative_mouse_mode(GameState *gs, bool enabled)
+void game_relative_mouse_mode(GameState* gs, bool enabled)
 {
     if (!SDL_SetWindowRelativeMouseMode(gs->window, enabled))
-        SDL_Log("Failed to set window relative mouse mode");
-
+        SDL_Log("Не удалось установить relative mouse mode");
     gs->cursor_visible = false;
 }
 
@@ -21,22 +21,21 @@ bool game_init(GameState* gs, const char* title, u32 window_w, u32 window_h, u64
     if (!gs) return false;
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_Log("Failed to initialize SDL");
+        SDL_Log("Не удалось инициализировать SDL");
         return false;
     }
-    SDL_Log("Game launched");
+    SDL_Log("SDL инициализирован");
 
-    if (!SDL_CreateWindowAndRenderer(title, window_w, window_h, window_flags, &gs->window, &gs->renderer)) {
-        SDL_Log("Failed to initialize window and renderer");
+    if (!SDL_CreateWindowAndRenderer(title, (int)window_w, (int)window_h,
+                                     window_flags, &gs->window, &gs->renderer)) {
+        SDL_Log("Не удалось создать окно и рендерер");
         return false;
     }
-    SDL_Log("Created window and renderer (%p | %p)", gs->window, gs->renderer);
+    SDL_Log("Окно и рендерер созданы (%p | %p)", gs->window, gs->renderer);
 
-    if (SDL_SetRenderLogicalPresentation(gs->renderer, window_w, window_h, SDL_LOGICAL_PRESENTATION_LETTERBOX)) {
-        SDL_Log("Render logical representation is set to SDL_LOGICAL_PRESENTATION_LETTERBOX");
-    }
-    else {
-        SDL_Log("Failed to set render logical representation to SDL_LOGICAL_PRESENTATION_LETTERBOX");
+    if (!SDL_SetRenderLogicalPresentation(gs->renderer, (int)window_w, (int)window_h,
+                                          SDL_LOGICAL_PRESENTATION_LETTERBOX)) {
+        SDL_Log("Не удалось установить логическое представление рендерера");
         return false;
     }
 
@@ -45,7 +44,7 @@ bool game_init(GameState* gs, const char* title, u32 window_w, u32 window_h, u64
     gs->window_w       = window_w;
     gs->window_h       = window_h;
     gs->ui_w           = window_w;
-    gs->ui_h           = (u32)(window_h * 0.15f);
+    gs->ui_h           = (u32)((float)window_h * 0.15f);
     gs->game_w         = window_w;
     gs->game_h         = window_h - gs->ui_h;
     gs->active         = true;
@@ -56,52 +55,52 @@ bool game_init(GameState* gs, const char* title, u32 window_w, u32 window_h, u64
     return true;
 }
 
-bool game_vsync(GameState *gs, int vsync)
+bool game_vsync(GameState* gs, int vsync)
 {
     if (!SDL_SetRenderVSync(gs->renderer, vsync)) {
-        SDL_Log("Failed to enable VSync");
+        SDL_Log("Не удалось включить VSync");
         return false;
     }
-
     gs->vsync = true;
     return true;
 }
 
 bool game_load_assets()
 {
-    if (false == assets_load_texture("assets/textures/tiles/default_64"ASSETS_EXT_TEX, TEXTURE_TILE_DEFAULT)) {
-        SDL_Log("Failed to load default texture. Game closed");
-        return false;
-    }
-    assets_load_texmap("assets/textures/tiles"ASSETS_EXT_TEX, TEXTURE_MAP_TILES, 128, 128);
-    assets_load_texmap("assets/textures/dodik"ASSETS_EXT_TEX, TEXTURE_MAP_DODIK, 64, 64);
-    assets_load_texmap("assets/textures/weapon"ASSETS_EXT_TEX, TEXTURE_MAP_WEAPON, 128, 128);
-    // todo
+    /* Текстурные карты (пути без расширения — добавляем ASSETS_EXT_TEX) */
+    assets_load_texmap("assets/textures/tiles"  ASSETS_EXT_TEX, TEXTURE_MAP_TILES);
+    assets_load_texmap("assets/textures/dodik"  ASSETS_EXT_TEX, TEXTURE_MAP_DODIK);
+    assets_load_texmap("assets/textures/weapon" ASSETS_EXT_TEX, TEXTURE_MAP_WEAPON);
+    assets_load_texmap("assets/textures/ui"     ASSETS_EXT_TEX, TEXTURE_MAP_UI);
+    assets_load_texmap("assets/textures/entity" ASSETS_EXT_TEX, TEXTURE_MAP_ENEMY);
+
+    /* Шрифтовые битмапы (упакованные через tools/pack_texmap.py) */
+    assets_load_fontmap("assets/textures/font/default_texmap"   ASSETS_EXT_TEX, FONT_MAP_DEFAULT);
+    assets_load_fontmap("assets/textures/font/minecraft_texmap" ASSETS_EXT_TEX, FONT_MAP_MINECRAFT);
 
     return true;
 }
 
 bool game_load_worlds(GameState* gs)
 {
-    world_load("assets/worlds/world_0"ASSETS_EXT_TEX, WORLD_0);
-    world_load("assets/worlds/world_1"ASSETS_EXT_TEX, WORLD_1);
-    world_load("assets/worlds/test_door"ASSETS_EXT_TEX, WORLD_TEST_DOOR);
-    world_load("assets/worlds/test_arena"ASSETS_EXT_TEX, WORLD_TEST_ARENA);
-
+    (void)gs;
+    world_load("assets/worlds/world_0"    ASSETS_EXT_TEX, WORLD_0);
+    world_load("assets/worlds/world_1"    ASSETS_EXT_TEX, WORLD_1);
+    world_load("assets/worlds/test_door"  ASSETS_EXT_TEX, WORLD_TEST_DOOR);
+    world_load("assets/worlds/test_arena" ASSETS_EXT_TEX, WORLD_TEST_ARENA);
     return true;
 }
 
-void game_init_player(GameState *gs, float start_x, float start_y, float start_angle)
+void game_init_player(GameState* gs, float start_x, float start_y, float start_angle)
 {
     gs->player = player_create(start_x, start_y, start_angle);
-    gs->input = (Input) { 0 };
+    gs->input  = (Input){0};
 }
 
 bool game_init_render(GameState* gs, u32 screen_w, u32 screen_h)
 {
-    return gs->renderer 
-        ? render_init(gs)
-        : false;
+    (void)screen_w; (void)screen_h;
+    return gs->renderer ? render_init(gs) : false;
 }
 
 void game_free(GameState* gs)
@@ -109,7 +108,7 @@ void game_free(GameState* gs)
     gtimer_free(gs->timer);
     entity_pool_free(gs->entities);
     world_free();
-    assets_free();
+    assets_free();      /* вызывает assets_font_free() внутри */
     render_free();
 }
 
@@ -122,7 +121,7 @@ bool game_set_active_world(GameState* gs, WorldId wid)
 bool game_init_timer(GameState* gs)
 {
     gs->timer = gtimer_init();
-    return gs->timer ? true : false;
+    return gs->timer != NULL;
 }
 
 bool game_init_entities(GameState* gs)
@@ -136,8 +135,6 @@ bool game_init_entities(GameState* gs)
         100,
         ENTITY_TEST_0
     );
-
     entity_pool_push(gs->entities, &entity_test);
-
     return true;
 }

@@ -22,7 +22,7 @@ typedef struct Dodik {
 typedef struct Player Player;
 typedef enum TextureId TextureId;
 
-void ui_dodik_update(Player* player, u32 delta_ms);
+void ui_dodik_update(const Player* player, u32 delta_ms);
 TextureId dodik_get_texture();
 Dodik* ui_dodik_get();
 
