@@ -92,7 +92,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 
         world_update(current_world, timer->delta_scaled);
         player_update(&game_state, timer->delta_scaled);
-        entity_pool_update(entities, timer->delta_scaled);
+        entity_pool_update(entities, player, timer->delta_scaled);
         render_update(&game_state, 65);
 
         ui_update(&game_state, 0, game_state.game_h, timer->delta_ms_raw);

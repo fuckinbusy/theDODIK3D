@@ -66,7 +66,7 @@ static void render_draw_entities(GameState* gs, Vec2 camera_plane, float proj_di
         Entity* ent = &pool->entities[i];
         if (!ent) continue;
 
-        Texture* texture = assets_get_texture(TEXTURE_MAP_ENEMY, TEXTURE_ENTITY_ENEMY);
+        Texture* texture = assets_get_texture(TEXTURE_MAP_ENEMY, ent->texture_id);
         if (!texture) continue;
 
         Vec2 d = gmath_vec2_sub(ent->pos, player->pos);

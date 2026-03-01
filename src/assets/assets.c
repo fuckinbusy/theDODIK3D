@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <malloc.h>
 #include <string.h>
 #include "assets.h"
 #include "assets/font.h"
@@ -21,6 +21,7 @@ static u32 assets_texture_w(TextureMapId mid)
         case TEXTURE_MAP_DODIK: return  ASSETS_TEXTURE_WIDTH_DODIK;
         case TEXTURE_MAP_WEAPON: return ASSETS_TEXTURE_WIDTH_WEAPON;
         case TEXTURE_MAP_UI_BG: return  ASSETS_TEXTURE_WIDTH_BG;
+        case TEXTURE_MAP_ENEMY: return  ASSETS_TEXTURE_WIDTH_ENEMY;
         default: return 0;
     }
 }
@@ -32,6 +33,7 @@ static u32 assets_texture_h(TextureMapId mid)
         case TEXTURE_MAP_DODIK: return  ASSETS_TEXTURE_HEIGHT_DODIK;
         case TEXTURE_MAP_WEAPON: return ASSETS_TEXTURE_HEIGHT_WEAPON;
         case TEXTURE_MAP_UI_BG: return  ASSETS_TEXTURE_HEIGHT_BG;
+        case TEXTURE_MAP_ENEMY: return  ASSETS_TEXTURE_HEIGHT_ENEMY;
         default: return 0;
     }
 }
@@ -49,7 +51,7 @@ static bool assets_read_atlas(FILE* file, TextureMap* tex_map, u32 tex_w, u32 te
 
     u32 cols = tex_map->w / tex_w;
     for (u32 tex_i = 0; tex_i < tex_map->textures_count; ++tex_i) {
-        u32 tile_x = tex_i & (cols - 1);
+        u32 tile_x = tex_i % cols;
         u32 tile_y = tex_i / cols;
 
         Texture* texture = malloc(sizeof(Texture) + tex_w * tex_h * sizeof(u32));

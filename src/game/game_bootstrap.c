@@ -71,7 +71,7 @@ bool game_load_assets()
     assets_load_texmap("assets/textures/dodik"   ASSETS_EXT_TEXTURE, TEXTURE_MAP_DODIK);
     assets_load_texmap("assets/textures/weapons" ASSETS_EXT_TEXTURE, TEXTURE_MAP_WEAPON);
     assets_load_texmap("assets/textures/ui_bg"   ASSETS_EXT_TEXTURE, TEXTURE_MAP_UI_BG);
-    assets_load_texmap("assets/textures/entity"  ASSETS_EXT_TEXTURE, TEXTURE_MAP_ENEMY);
+    assets_load_texmap("assets/textures/enemy"   ASSETS_EXT_TEXTURE, TEXTURE_MAP_ENEMY);
 
     assets_load_fontmap("assets/textures/font/default"   ASSETS_EXT_FONT, FONT_MAP_DEFAULT);
     assets_load_fontmap("assets/textures/font/minecraft" ASSETS_EXT_FONT, FONT_MAP_MINECRAFT);
@@ -129,7 +129,7 @@ bool game_init_entities(GameState* gs)
 
     Entity entity_test = entity_create(
         gmath_vec2(5, 5),
-        gmath_vec2(0, 0),
+        0,
         100,
         ENTITY_TEST_0
     );

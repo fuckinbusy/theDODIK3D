@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include "utypes.h"
 #include "math/gmath.h"
+#include "assets/assets.h"
 
 #define ENTITIES_MAX 20
 #define ENTITY_VELOCITY 1.5f
@@ -18,6 +19,7 @@ typedef struct Entity {
 	u32 type;
 	u32 health;
 	u32 damage;
+	u32 texture_id;
 
 	float angle;
 	float velocity;
@@ -35,13 +37,17 @@ typedef struct EntityPool {
 	u32 size;
 } EntityPool;
 
-static inline Entity entity_create(Vec2 pos, Vec2 dir, u32 health, EntityType type)
+typedef struct Player Player;
+
+static inline Entity entity_create(Vec2 pos, float angle, u32 health, EntityType type)
 {
 	Entity ent = { 0 };
 	ent.type = type;
 	ent.pos = pos;
-	ent.dir = dir;
+	ent.dir = gmath_direction(angle);
+	ent.angle = angle;
 	ent.health = health;
+	ent.texture_id = TEXTURE_ENTITY_FRONT;
 	ent.velocity = ENTITY_VELOCITY;
 	ent.rot_velocity = ENTITY_VELOCITY;
 	ent.is_alive = health > 0 ? true : false;
@@ -54,6 +60,6 @@ Entity* entity_pool_get(EntityPool* pool, u32 index);
 Entity* entity_pool_find(EntityPool* pool, EntityType id);
 void entity_pool_free(EntityPool* pool);
 
-void entity_pool_update(EntityPool* pool, float dt);
+void entity_pool_update(EntityPool* pool, Player* player, float dt);
 
 #endif // _CORE_ENTITY_H
