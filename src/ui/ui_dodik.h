@@ -5,8 +5,8 @@
 
 typedef enum DodikState {
     DODIK_STATE_IDLE = 0,
+    DODIK_STATE_EXCITED,
     DODIK_STATE_ANGRY,
-    DODIK_STATE_SAD,
     DODIK_STATE_LOOK_L,
     DODIK_STATE_LOOK_R,
 } DodikState;

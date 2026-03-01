@@ -14,76 +14,119 @@ static void assets_free_texmap(TextureMap* tm)
     free(tm);
 }
 
+static u32 assets_texture_w(TextureMapId mid)
+{
+    switch (mid) {
+        case TEXTURE_MAP_TILES: return  ASSETS_TEXTURE_WIDTH_TILE;
+        case TEXTURE_MAP_DODIK: return  ASSETS_TEXTURE_WIDTH_DODIK;
+        case TEXTURE_MAP_WEAPON: return ASSETS_TEXTURE_WIDTH_WEAPON;
+        case TEXTURE_MAP_UI_BG: return  ASSETS_TEXTURE_WIDTH_BG;
+        default: return 0;
+    }
+}
+
+static u32 assets_texture_h(TextureMapId mid)
+{
+    switch (mid) {
+        case TEXTURE_MAP_TILES: return  ASSETS_TEXTURE_HEIGHT_TILE;
+        case TEXTURE_MAP_DODIK: return  ASSETS_TEXTURE_HEIGHT_DODIK;
+        case TEXTURE_MAP_WEAPON: return ASSETS_TEXTURE_HEIGHT_WEAPON;
+        case TEXTURE_MAP_UI_BG: return  ASSETS_TEXTURE_HEIGHT_BG;
+        default: return 0;
+    }
+}
+
+static bool assets_read_atlas(FILE* file, TextureMap* tex_map, u32 tex_w, u32 tex_h)
+{
+    size_t pixels_total = tex_map->h * tex_map->w;
+    u32* pixels_atlas = malloc(pixels_total * sizeof(u32));
+    if (!pixels_atlas) return false;
+
+    if (fread(pixels_atlas, sizeof(u32), pixels_total, file) != pixels_total) {
+        free(pixels_atlas);
+        return false;
+    }
+
+    u32 cols = tex_map->w / tex_w;
+    for (u32 tex_i = 0; tex_i < tex_map->textures_count; ++tex_i) {
+        u32 tile_x = tex_i & (cols - 1);
+        u32 tile_y = tex_i / cols;
+
+        Texture* texture = malloc(sizeof(Texture) + tex_w * tex_h * sizeof(u32));
+        if (!texture) { free(pixels_atlas); return false; }
+
+        texture->w = tex_w;
+        texture->h = tex_h;
+
+        for (u32 row = 0; row < tex_h; ++row) {
+            u32 atlas_y = tile_y * tex_h + row;
+            u32 atlas_x = tile_x * tex_w;
+
+            memcpy(
+                &texture->pixels[row * tex_w],
+                &pixels_atlas[atlas_y * tex_map->w + atlas_x],
+                tex_w * sizeof(u32)
+            );
+        }
+
+        tex_map->textures[tex_i] = texture;
+    }
+
+    return true;
+}
+
 bool assets_load_texmap(const char* path, TextureMapId map_id)
 {
     if (!path) return false;
-    if (map_id >= ASSETS_TEXTUREMAPS_MAX) return false;
+    if (map_id < 0 || map_id >= ASSETS_TEXTUREMAPS_MAX) return false;
 
     FILE* f = fopen(path, "rb");
     if (!f) {
-        SDL_Log("assets: не удалось открыть `%s`", path);
+        SDL_Log("assets: failed to open `%s`", path);
         return false;
     }
 
-    u32 tex_count = 0;
-    if (fread(&tex_count, sizeof(u32), 1, f) != 1 || tex_count == 0) {
-        SDL_Log("assets: не удалось прочитать кол-во текстур в `%s`", path);
+    u32 map_w = 0;
+    u32 map_h = 0;
+    if (fread(&map_w, sizeof(u32), 1, f) != 1 ||
+        fread(&map_h, sizeof(u32), 1, f) != 1) {
+        SDL_Log("assets: failed to read texture map sizes in `%s`", path);
         fclose(f);
         return false;
     }
 
-    /* --- выделяем TextureMap (гибкий массив указателей) --- */
+    u32 tex_w = assets_texture_w(map_id);
+    u32 tex_h = assets_texture_h(map_id);
+    u32 cols = map_w / tex_w;
+    u32 rows = map_h / tex_h;
+    u32 tex_count = cols * rows;
+
     TextureMap* tex_map = malloc(sizeof(TextureMap) + sizeof(Texture*) * tex_count);
     if (!tex_map) {
-        SDL_Log("assets: нет памяти для TextureMap");
+        SDL_Log("assets: not enough memory for TextureMap");
         fclose(f);
         return false;
     }
+    
+    tex_map->h = map_h;
+    tex_map->w = map_w;
     tex_map->textures_count = tex_count;
+
     memset(tex_map->textures, 0, sizeof(Texture*) * tex_count);
 
-    for (u32 i = 0; i < tex_count; ++i) {
-        u32 w = 0, h = 0;
-        if (fread(&w, sizeof(u32), 1, f) != 1 ||
-            fread(&h, sizeof(u32), 1, f) != 1 ||
-            w == 0 || h == 0)
-        {
-            SDL_Log("assets: ошибка чтения размеров текстуры %u в `%s`", i, path);
-            goto exit_failure;
-        }
-
-        size_t pixels_size = (size_t)w * h * sizeof(u32);
-        Texture* texture = malloc(sizeof(Texture) + pixels_size);
-        if (!texture) {
-            SDL_Log("assets: нет памяти для текстуры %u", i);
-            goto exit_failure;
-        }
-
-        texture->w = w;
-        texture->h = h;
-
-        if (fread(texture->pixels, 1, pixels_size, f) != pixels_size) {
-            free(texture);
-            SDL_Log("assets: ошибка чтения пикселей текстуры %u в `%s`", i, path);
-            goto exit_failure;
-        }
-
-        tex_map->textures[i] = texture;
+    if (!assets_read_atlas(f, tex_map, tex_w, tex_h)) {
+        SDL_Log("assets: failed to read texture map textures `%s`", path);
+        fclose(f);
+        assets_free_texmap(tex_map);
+        return false;
     }
-
-    fclose(f);
 
     if (texture_maps[map_id])
         assets_free_texmap(texture_maps[map_id]);
     texture_maps[map_id] = tex_map;
 
-    SDL_Log("assets: загружена TextureMap `%s` (%u текстур)", path, tex_count);
+    SDL_Log("assets: loaded TextureMap `%s` (%u textures)", path, tex_count);
     return true;
-
-exit_failure:
-    fclose(f);
-    assets_free_texmap(tex_map);
-    return false;
 }
 
 void assets_free()

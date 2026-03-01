@@ -44,10 +44,10 @@ void ui_update(GameState* gs, u32 x_start, u32 y_start, float delta_ms)
     int gun_y = (int)(((float)gs->game_h - (float)gun_size + gun_bob.y) * 1.1f);
 
     render_draw_texture(gun_x, gun_y, gun_size, gun_size,
-        TEXTURE_MAP_WEAPON, TEXTURE_WEAPON_HAND_TEST, false);
+        TEXTURE_MAP_WEAPON, TEXTURE_WEAPON_HAND, false);
 
     render_draw_texture((int)x_start, (int)y_start, (int)gs->ui_w, (int)gs->ui_h,
-        TEXTURE_MAP_UI, TEXTURE_UI_BACKGROUND, false);
+        TEXTURE_MAP_UI_BG, TEXTURE_UI_BG, false);
 
     render_draw_texture(dodik_x, (int)y_start, dodik_size, dodik_size,
         TEXTURE_MAP_DODIK, dodik_get_texture(), dodik->mirrored);

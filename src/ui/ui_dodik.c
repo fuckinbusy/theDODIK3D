@@ -20,15 +20,15 @@ static void dodik_set_state(DodikState state)
 TextureId dodik_get_texture()
 {
     switch (dodik.state) {
-    case DODIK_STATE_IDLE:   return TEXTURE_UI_DODIK_IDLE;
+        case DODIK_STATE_IDLE:    return TEXTURE_UI_DODIK_IDLE;
 
-    case DODIK_STATE_LOOK_L:
-    case DODIK_STATE_LOOK_R: return TEXTURE_UI_DODIK_SIDE_LOOK;
+        case DODIK_STATE_LOOK_L:
+        case DODIK_STATE_LOOK_R:  return TEXTURE_UI_DODIK_SIDE_LOOK;
 
-    case DODIK_STATE_ANGRY:  return TEXTURE_UI_DODIK_ANGRY;
-    case DODIK_STATE_SAD:    return TEXTURE_UI_DODIK_SAD;
+        case DODIK_STATE_EXCITED: return TEXTURE_UI_DODIK_EXCITED;
+        case DODIK_STATE_ANGRY:   return TEXTURE_UI_DODIK_ANGRY;
 
-    default:                 return TEXTURE_UI_DODIK_IDLE;
+        default:                  return TEXTURE_UI_DODIK_IDLE;
     }
 }
 
@@ -43,38 +43,38 @@ void ui_dodik_update(const Player* player, u32 delta_ms)
     dodik.state_time += delta_ms;
 
     switch (dodik.state) {
-    case DODIK_STATE_IDLE: {
-        if (dodik.state_time >= 5000) {
-            dodik_set_state(DODIK_STATE_LOOK_L);
-        }
-    } break;
+        case DODIK_STATE_IDLE: {
+            if (dodik.state_time >= 5000) {
+                dodik_set_state(DODIK_STATE_LOOK_L);
+            }
+        } break;
 
-    case DODIK_STATE_LOOK_L: {
-        if (dodik.state_time >= 700) {
-            dodik_set_state(DODIK_STATE_LOOK_R);
-            dodik.mirrored = true;
-        }
-    } break;
+        case DODIK_STATE_LOOK_L: {
+            if (dodik.state_time >= 700) {
+                dodik_set_state(DODIK_STATE_LOOK_R);
+                dodik.mirrored = true;
+            }
+        } break;
 
-    case DODIK_STATE_LOOK_R: {
-        if (dodik.state_time >= 700) {
-            dodik_set_state(DODIK_STATE_IDLE);
-            dodik.mirrored = false;
-        }
-    } break;
+        case DODIK_STATE_LOOK_R: {
+            if (dodik.state_time >= 700) {
+                dodik_set_state(DODIK_STATE_IDLE);
+                dodik.mirrored = false;
+            }
+        } break;
 
-    case DODIK_STATE_ANGRY: {
-        if (dodik.state_time >= 1000) {
-            dodik_set_state(DODIK_STATE_SAD);
-        }
-    } break;
+        case DODIK_STATE_ANGRY: {
+            if (dodik.state_time >= 1000) {
+                dodik_set_state(DODIK_STATE_EXCITED);
+            }
+        } break;
 
-    case DODIK_STATE_SAD: {
-        if (dodik.state_time >= 1000) {
-            dodik_set_state(DODIK_STATE_IDLE);
-        }
-    } break;
+        case DODIK_STATE_EXCITED: {
+            if (dodik.state_time >= 1000) {
+                dodik_set_state(DODIK_STATE_IDLE);
+            }
+        } break;
 
-    default: break;
+        default: break;
     }
 }

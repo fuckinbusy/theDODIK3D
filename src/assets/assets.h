@@ -12,6 +12,15 @@
 #define ASSETS_EXT_FONT        ".DIHF"
 #define ASSETS_EXT_ANIM        ".DIHA"
 
+#define ASSETS_TEXTURE_HEIGHT_TILE   128
+#define ASSETS_TEXTURE_WIDTH_TILE    128
+#define ASSETS_TEXTURE_WIDTH_DODIK   64
+#define ASSETS_TEXTURE_HEIGHT_DODIK  64
+#define ASSETS_TEXTURE_WIDTH_WEAPON  128
+#define ASSETS_TEXTURE_HEIGHT_WEAPON 128
+#define ASSETS_TEXTURE_WIDTH_BG      1280
+#define ASSETS_TEXTURE_HEIGHT_BG     128
+
 typedef struct Texture {
     u32 w, h;
     u32 pixels[];   /* ARGB8888, w*h */
@@ -19,6 +28,7 @@ typedef struct Texture {
 
 typedef struct TextureMap {
     u32      textures_count;
+    u32      w, h;
     Texture* textures[];
 } TextureMap;
 
@@ -34,7 +44,7 @@ typedef struct AnimatedTexture {
 typedef enum TextureMapId {
     TEXTURE_MAP_TILES = 0,
     TEXTURE_MAP_DODIK,
-    TEXTURE_MAP_UI,
+    TEXTURE_MAP_UI_BG,
     TEXTURE_MAP_WEAPON,
     TEXTURE_MAP_ENEMY,
 } TextureMapId;
@@ -49,7 +59,8 @@ typedef enum TextureId {
     TEXTURE_TILE_DOOR,
 
     /* --- TEXTURE_MAP_UI --- */
-    TEXTURE_UI_BACKGROUND = 0,
+    TEXTURE_UI_BG = 0,
+    TEXTURE_UI_BG2,
 
     /* --- TEXTURE_MAP_DODIK --- */
     TEXTURE_UI_DODIK_IDLE = 0,
@@ -71,14 +82,12 @@ typedef enum TextureId {
     TEXTURE_UI_DODIK_FRAME,
 
     /* --- TEXTURE_MAP_WEAPON --- */
-    TEXTURE_WEAPON_HAND_TEST = 0,
-    TEXTURE_WEAPON_SHOTGUN_TEST,
+    TEXTURE_WEAPON_HAND = 0,
+    TEXTURE_WEAPON_SHOTGUN,
 
     /* --- TEXTURE_MAP_ENEMY --- */
     TEXTURE_ENTITY_ENEMY = 0,
 } TextureId;
-
-#define TEXTURE_UI_DODIK_SAD TEXTURE_UI_DODIK_DEAD
 
 typedef enum AnimationId {
     TEXTURE_ANIM_TEST,
@@ -92,7 +101,7 @@ void assets_free();
 
 static inline Texture* assets_get_texture(TextureMapId mid, TextureId tid)
 {
-    if (mid >= ASSETS_TEXTUREMAPS_MAX) return NULL;
+    if (mid < 0 || mid >= ASSETS_TEXTUREMAPS_MAX) return NULL;
 
     TextureMap* tm = texture_maps[mid];
     if (!tm || (u32)tid >= tm->textures_count) return NULL;

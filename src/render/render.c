@@ -24,12 +24,11 @@ static void render_draw_plane(int x, int y_start, int y_finish, u32 color)
 }
 
 static void render_draw_wall(int x, int y1, int y2, int wall_len,
-    int screen_h, RayResult* ray, u32 tex_id)
+    int screen_h, RayResult* ray, TextureId tex_id)
 {
-    Texture* texture = assets_get_texture(TEXTURE_MAP_TILES, (TextureId)tex_id);
+    Texture* texture = assets_get_texture(TEXTURE_MAP_TILES, tex_id);
     if (!texture) {
-        SDL_Log("render: no texture for wall id=%u", tex_id);
-        return;
+        texture = assets_get_texture(TEXTURE_MAP_TILES, TEXTURE_TILE_DEFAULT);
     }
 
     int texture_x = (int)(ray->u * texture->w);
@@ -288,7 +287,7 @@ void render_draw_font(Vec2 start, int screen_w, int screen_h,
     int size, u32 color, FontMapId mid, const char* str)
 {
     if (!str) return;
-    if (mid >= FONT_MAPS_MAX || !font_maps[mid]) return;
+    if (mid < 0 || mid >= FONT_MAPS_MAX || !font_maps[mid]) return;
 
     start.y -= size;
     int x_origin = (int)start.x;

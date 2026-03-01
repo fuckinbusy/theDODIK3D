@@ -6,18 +6,12 @@ FontMap* font_maps[FONT_MAPS_MAX] = { 0 };
 
 bool assets_load_fontmap(const char* path, FontMapId id)
 {
-    if (!path || id >= FONT_MAPS_MAX) return false;
+    if (!path) return false;
+    if (id < 0 || id >= FONT_MAPS_MAX) return false;
 
     FILE* f = fopen(path, "rb");
     if (!f) {
         SDL_Log("font: failed to open `%s`", path);
-        return false;
-    }
-
-    u32 tex_count = 0;
-    if (fread(&tex_count, sizeof(u32), 1, f) != 1 || tex_count == 0) {
-        SDL_Log("font: wrong file format `%s`", path);
-        fclose(f);
         return false;
     }
 
@@ -31,7 +25,7 @@ bool assets_load_fontmap(const char* path, FontMapId id)
         return false;
     }
 
-    size_t pixels_size = (size_t)w * h * sizeof(u32);
+    u32 pixels_size = (size_t)w * h * sizeof(u32);
     FontMap* fm = malloc(sizeof(FontMap) + pixels_size);
     if (!fm) {
         SDL_Log("font: not enough memory for FontMap");

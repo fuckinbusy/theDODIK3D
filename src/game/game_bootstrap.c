@@ -67,10 +67,11 @@ bool game_vsync(GameState* gs, int vsync)
 
 bool game_load_assets()
 {
-    assets_load_texmap("assets/textures/tiles"  ASSETS_EXT_TEXTURE, TEXTURE_MAP_TILES);
-    assets_load_texmap("assets/textures/dodik"  ASSETS_EXT_TEXTURE, TEXTURE_MAP_DODIK);
-    assets_load_texmap("assets/textures/weapon" ASSETS_EXT_TEXTURE, TEXTURE_MAP_WEAPON);
-    assets_load_texmap("assets/textures/entity" ASSETS_EXT_TEXTURE, TEXTURE_MAP_ENEMY);
+    assets_load_texmap("assets/textures/tiles"   ASSETS_EXT_TEXTURE, TEXTURE_MAP_TILES);
+    assets_load_texmap("assets/textures/dodik"   ASSETS_EXT_TEXTURE, TEXTURE_MAP_DODIK);
+    assets_load_texmap("assets/textures/weapons" ASSETS_EXT_TEXTURE, TEXTURE_MAP_WEAPON);
+    assets_load_texmap("assets/textures/ui_bg"   ASSETS_EXT_TEXTURE, TEXTURE_MAP_UI_BG);
+    assets_load_texmap("assets/textures/entity"  ASSETS_EXT_TEXTURE, TEXTURE_MAP_ENEMY);
 
     assets_load_fontmap("assets/textures/font/default"   ASSETS_EXT_FONT, FONT_MAP_DEFAULT);
     assets_load_fontmap("assets/textures/font/minecraft" ASSETS_EXT_FONT, FONT_MAP_MINECRAFT);
