@@ -20,15 +20,15 @@ static void dodik_set_state(DodikState state)
 TextureId dodik_get_texture()
 {
     switch (dodik.state) {
-        case DODIK_STATE_IDLE:   return TEXTURE_UI_DODIK_IDLE;
+    case DODIK_STATE_IDLE:   return TEXTURE_UI_DODIK_IDLE;
 
-        case DODIK_STATE_LOOK_L:
-        case DODIK_STATE_LOOK_R: return TEXTURE_UI_DODIK_SIDE_LOOK;
+    case DODIK_STATE_LOOK_L:
+    case DODIK_STATE_LOOK_R: return TEXTURE_UI_DODIK_SIDE_LOOK;
 
-        case DODIK_STATE_ANGRY:  return TEXTURE_UI_DODIK_ANGRY;
-        case DODIK_STATE_SAD:    return TEXTURE_UI_DODIK_SAD;
+    case DODIK_STATE_ANGRY:  return TEXTURE_UI_DODIK_ANGRY;
+    case DODIK_STATE_SAD:    return TEXTURE_UI_DODIK_SAD;
 
-        default:                 return TEXTURE_UI_DODIK_IDLE;
+    default:                 return TEXTURE_UI_DODIK_IDLE;
     }
 }
 

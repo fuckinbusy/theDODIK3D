@@ -324,6 +324,9 @@
     <ClInclude Include="src\ui\ui_stats.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="src\assets\font.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\assets\assets.c">
@@ -375,6 +378,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\ui_stats.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="src\assets\font.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

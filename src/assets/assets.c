@@ -1,111 +1,98 @@
 #include <stdio.h>
-#include <malloc.h>
-#include <ctype.h>
-#include "string.h"
+#include <stdlib.h>
+#include <string.h>
 #include "assets.h"
+#include "assets/font.h"
 
-TextureMap* texture_maps[ASSETS_TEXTUREMAPS_MAX] = {0};
-static u32 map_counter = 0;
+TextureMap* texture_maps[ASSETS_TEXTUREMAPS_MAX] = { 0 };
 
-static bool assets_add(TextureMap* texture_map, TextureMapId mid)
+static void assets_free_texmap(TextureMap* tm)
 {
-    texture_maps[mid] = texture_map;
-    map_counter++;
-    return true;
+    if (!tm) return;
+    for (u32 i = 0; i < tm->textures_count; ++i)
+        if (tm->textures[i]) free(tm->textures[i]);
+    free(tm);
 }
 
 bool assets_load_texmap(const char* path, TextureMapId map_id)
 {
     if (!path) return false;
-    if (map_id < 0 || map_id >= ASSETS_TEXTURES_MAX)
-        return false;
+    if (map_id >= ASSETS_TEXTUREMAPS_MAX) return false;
 
     FILE* f = fopen(path, "rb");
     if (!f) {
-        SDL_Log("Failed to open file `%s`", path);
+        SDL_Log("assets: не удалось открыть `%s`", path);
         return false;
     }
 
     u32 tex_count = 0;
-    if (fread(&tex_count, sizeof(u32), 1, f) != 1) {
-        SDL_Log("Failed to read file `%s` (Wrong format or file corrupted)", path);
-        goto exit_failure;
+    if (fread(&tex_count, sizeof(u32), 1, f) != 1 || tex_count == 0) {
+        SDL_Log("assets: не удалось прочитать кол-во текстур в `%s`", path);
+        fclose(f);
+        return false;
     }
 
-    TextureMap* tex_map = malloc(sizeof(u32) + (sizeof(Texture*) * tex_count));
+    /* --- выделяем TextureMap (гибкий массив указателей) --- */
+    TextureMap* tex_map = malloc(sizeof(TextureMap) + sizeof(Texture*) * tex_count);
     if (!tex_map) {
-        SDL_Log("Failed to initialize memory for texture map");
-        goto exit_failure;
+        SDL_Log("assets: нет памяти для TextureMap");
+        fclose(f);
+        return false;
     }
-
+    tex_map->textures_count = tex_count;
     memset(tex_map->textures, 0, sizeof(Texture*) * tex_count);
 
     for (u32 i = 0; i < tex_count; ++i) {
-        u32 w = 0;
-        u32 h = 0;
-
+        u32 w = 0, h = 0;
         if (fread(&w, sizeof(u32), 1, f) != 1 ||
-            fread(&h, sizeof(u32), 1, f) != 1) {
-            SDL_Log("Failed to read file `%s` (Wrong format or file corrupted)", path);
+            fread(&h, sizeof(u32), 1, f) != 1 ||
+            w == 0 || h == 0)
+        {
+            SDL_Log("assets: ошибка чтения размеров текстуры %u в `%s`", i, path);
             goto exit_failure;
         }
 
-        if (w == 0 || h == 0) goto exit_failure;
+        size_t pixels_size = (size_t)w * h * sizeof(u32);
+        Texture* texture = malloc(sizeof(Texture) + pixels_size);
+        if (!texture) {
+            SDL_Log("assets: нет памяти для текстуры %u", i);
+            goto exit_failure;
+        }
 
-        size_t pixels_size = w * h * sizeof(u32);
-        size_t struct_size = sizeof(Texture) + pixels_size;
+        texture->w = w;
+        texture->h = h;
 
-        Texture* texture = (Texture*)malloc(struct_size);
-        if (!texture) goto exit_failure;
-
-        size_t read = fread(texture->pixels, sizeof(u8), pixels_size, f);
-
-        if (read != pixels_size) {
+        if (fread(texture->pixels, 1, pixels_size, f) != pixels_size) {
             free(texture);
-            SDL_Log("Failed to read that DIH `%s`", path);
+            SDL_Log("assets: ошибка чтения пикселей текстуры %u в `%s`", i, path);
             goto exit_failure;
         }
 
-        if (!assets_add(tex_map, map_id)) {
-            free(texture);
-            SDL_Log("Failed to load texture `%s` (Textures buffer full)", path);
-            goto exit_failure;
-        }
+        tex_map->textures[i] = texture;
     }
 
     fclose(f);
-    SDL_Log("Texture loaded %-*s %ux%u", 55, path, w, h);
+
+    if (texture_maps[map_id])
+        assets_free_texmap(texture_maps[map_id]);
+    texture_maps[map_id] = tex_map;
+
+    SDL_Log("assets: загружена TextureMap `%s` (%u текстур)", path, tex_count);
     return true;
- 
+
 exit_failure:
     fclose(f);
+    assets_free_texmap(tex_map);
     return false;
 }
 
 void assets_free()
 {
-    for (int i = 0; i < ASSETS_TEXTUREMAPS_MAX; ++i)
-        if (texture_maps[i]) { free(texture_maps[i]); texture_maps[i] = NULL; }
-}
-
-FontChar assets_font_char(TextureMapId mid, char c)
-{
-    FontChar fc = {NULL, 0, 0, 0};
-    TextureMap* tm = texture_maps[mid];
-    if (!tm) return fc;
-
-    int idx = assets_font_index(c);
-
-    if (idx < 0 || idx >= ASSETS_FONT_CHARS_COUNT) return fc;
-
-    u32 columns = 10; // font->w / ASSETS_FONT_CHAR_SIZE;
-    u32 x = (idx & (columns - 1)) * ASSETS_FONT_CHAR_SIZE;
-    u32 y = (idx / columns) * ASSETS_FONT_CHAR_SIZE;
-
-    fc.pixels = &(tm->textures[0])->pixels[y * tm->w + x];
-    fc.w = ASSETS_FONT_CHAR_SIZE;
-    fc.h = ASSETS_FONT_CHAR_SIZE;
-    fc.stride = tm->w;
-
-    return fc;
+    for (int i = 0; i < ASSETS_TEXTUREMAPS_MAX; ++i) {
+        if (texture_maps[i]) {
+            assets_free_texmap(texture_maps[i]);
+            texture_maps[i] = NULL;
+        }
+    }
+    assets_font_free();
 }

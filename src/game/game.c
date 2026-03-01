@@ -1,7 +1,7 @@
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_main.h"
-#include "utypes.h"
+
 #include "core/player.h"
 #include "core/world.h"
 #include "render/render.h"
@@ -9,9 +9,7 @@
 #include "game_state.h"
 #include "game_systems.h"
 #include "core/gtimer.h"
-#include "assets/assets.h"
 #include "ui/ui_stats.h"
-#include "math/gmath.h"
 
 #define WINDOW_W     1920
 #define WINDOW_H     1080
