@@ -283,6 +283,7 @@ copy /Y "$(SolutionDir)lib\$(Platform)\SDL3.dll" "$(OutDir)"</Command>
     <ClInclude Include="include\SDL3\SDL_vulkan.h" />
     <ClInclude Include="include\utypes.h" />
     <ClInclude Include="src\assets\assets.h" />
+    <ClInclude Include="src\assets\font.h" />
     <ClInclude Include="src\core\entity.h" />
     <ClInclude Include="src\core\gtimer.h" />
     <ClInclude Include="src\core\input.h" />
@@ -301,6 +302,7 @@ copy /Y "$(SolutionDir)lib\$(Platform)\SDL3.dll" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\assets\assets.c" />
+    <ClCompile Include="src\assets\font.c" />
     <ClCompile Include="src\core\entity.c" />
     <ClCompile Include="src\core\gtimer.c" />
     <ClCompile Include="src\core\player.c" />
