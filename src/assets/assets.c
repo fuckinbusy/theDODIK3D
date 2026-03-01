@@ -49,7 +49,7 @@ static bool assets_read_atlas(FILE* file, TextureMap* tex_map, u32 tex_w, u32 te
 
     u32 cols = tex_map->w / tex_w;
     for (u32 tex_i = 0; tex_i < tex_map->textures_count; ++tex_i) {
-        u32 tile_x = tex_i & (cols - 1);
+        u32 tile_x = tex_i % cols;
         u32 tile_y = tex_i / cols;
 
         Texture* texture = malloc(sizeof(Texture) + tex_w * tex_h * sizeof(u32));
