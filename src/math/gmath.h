@@ -89,4 +89,13 @@ static inline Vec2 gmath_vec2_dir(Vec2 v)
     return gmath_vec2_div(v, vlen);
 }
 
+/* Нормализует угол в диапазон [0, 2π) */
+static inline float gmath_normalize_angle(float angle)
+{
+    float two_pi = 2.0f * MATH_PI;
+    if (angle < 0.0f)      angle += two_pi;
+    if (angle >= two_pi)   angle -= two_pi;
+    return angle;
+}
+
 #endif // _GAME_MATH_H

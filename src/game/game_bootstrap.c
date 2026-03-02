@@ -9,6 +9,8 @@
 #include "core/gtimer.h"
 #include "core/entity.h"
 
+#define GAME_UI_HEIGHT_RATIO 0.15f
+
 void game_relative_mouse_mode(GameState* gs, bool enabled)
 {
     if (!SDL_SetWindowRelativeMouseMode(gs->window, enabled))
@@ -44,7 +46,7 @@ bool game_init(GameState* gs, const char* title, u32 window_w, u32 window_h, u64
     gs->window_w = window_w;
     gs->window_h = window_h;
     gs->ui_w = window_w;
-    gs->ui_h = (u32)((float)window_h * 0.15f);
+    gs->ui_h = (u32)((float)window_h * GAME_UI_HEIGHT_RATIO);
     gs->game_w = window_w;
     gs->game_h = window_h - gs->ui_h;
     gs->active = true;

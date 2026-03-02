@@ -11,6 +11,19 @@
 #define RENDER_COLOR_GREEN (u32)0xFF00FF00
 #define RENDER_COLOR_BLUE  (u32)0xFF0000FF
 
+/* Параметры затенения и плоскостей */
+#define RENDER_SHADE_BASE          1.5f
+#define RENDER_CEILING_COLOR       RENDER_COLOR_BLACK
+#define RENDER_FLOOR_COLOR         ((u32)0xFFAAAAAA)
+
+/* Параметры проекции спрайтов */
+#define RENDER_SPRITE_CULL_DIST    0.85f
+#define RENDER_SPRITE_HEIGHT_SCALE 0.9f
+#define RENDER_SPRITE_OFFSET_SCALE 0.1f
+
+/* FOV по умолчанию (градусы) */
+#define RENDER_FOV_DEFAULT         65
+
 typedef struct Player    Player;
 typedef struct World     World;
 typedef struct GameState GameState;
@@ -60,6 +73,11 @@ static inline void render_buffer_put_pixel(u32 x, u32 y, u32 color)
 static inline u32 render_color(u8 r, u8 g, u8 b, u8 a)
 {
     return ((u32)a << 24) | ((u32)r << 16) | ((u32)g << 8) | (u32)b;
+}
+
+static inline bool render_has_alpha(u32 color)
+{
+    return ((color >> 24) & 0xFF) != 0;
 }
 
 #endif /* _RENDER_H */
