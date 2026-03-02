@@ -14,29 +14,17 @@ static void assets_free_texmap(TextureMap* tm)
     free(tm);
 }
 
-static u32 assets_texture_w(TextureMapId mid)
-{
-    switch (mid) {
-        case TEXTURE_MAP_TILES: return  ASSETS_TEXTURE_WIDTH_TILE;
-        case TEXTURE_MAP_DODIK: return  ASSETS_TEXTURE_WIDTH_DODIK;
-        case TEXTURE_MAP_WEAPON: return ASSETS_TEXTURE_WIDTH_WEAPON;
-        case TEXTURE_MAP_UI_BG: return  ASSETS_TEXTURE_WIDTH_BG;
-        case TEXTURE_MAP_ENEMY: return  ASSETS_TEXTURE_WIDTH_ENEMY;
-        default: return 0;
-    }
-}
+/* Таблица размеров субтекстур по TextureMapId.
+   Добавить новый TextureMap = одна строка здесь. */
+typedef struct { u32 w, h; } TextureMapMeta;
 
-static u32 assets_texture_h(TextureMapId mid)
-{
-    switch (mid) {
-        case TEXTURE_MAP_TILES: return  ASSETS_TEXTURE_HEIGHT_TILE;
-        case TEXTURE_MAP_DODIK: return  ASSETS_TEXTURE_HEIGHT_DODIK;
-        case TEXTURE_MAP_WEAPON: return ASSETS_TEXTURE_HEIGHT_WEAPON;
-        case TEXTURE_MAP_UI_BG: return  ASSETS_TEXTURE_HEIGHT_BG;
-        case TEXTURE_MAP_ENEMY: return  ASSETS_TEXTURE_HEIGHT_ENEMY;
-        default: return 0;
-    }
-}
+static const TextureMapMeta s_tex_meta[ASSETS_TEXTUREMAPS_MAX] = {
+    [TEXTURE_MAP_TILES]  = { ASSETS_TEXTURE_WIDTH_TILE,   ASSETS_TEXTURE_HEIGHT_TILE   },
+    [TEXTURE_MAP_DODIK]  = { ASSETS_TEXTURE_WIDTH_DODIK,  ASSETS_TEXTURE_HEIGHT_DODIK  },
+    [TEXTURE_MAP_WEAPON] = { ASSETS_TEXTURE_WIDTH_WEAPON, ASSETS_TEXTURE_HEIGHT_WEAPON },
+    [TEXTURE_MAP_UI_BG]  = { ASSETS_TEXTURE_WIDTH_BG,     ASSETS_TEXTURE_HEIGHT_BG     },
+    [TEXTURE_MAP_ENEMY]  = { ASSETS_TEXTURE_WIDTH_ENEMY,  ASSETS_TEXTURE_HEIGHT_ENEMY  },
+};
 
 static bool assets_read_atlas(FILE* file, TextureMap* tex_map, u32 tex_w, u32 tex_h)
 {
@@ -97,8 +85,8 @@ bool assets_load_texmap(const char* path, TextureMapId map_id)
         return false;
     }
 
-    u32 tex_w = assets_texture_w(map_id);
-    u32 tex_h = assets_texture_h(map_id);
+    u32 tex_w = s_tex_meta[map_id].w;
+    u32 tex_h = s_tex_meta[map_id].h;
     u32 cols = map_w / tex_w;
     u32 rows = map_h / tex_h;
     u32 tex_count = cols * rows;

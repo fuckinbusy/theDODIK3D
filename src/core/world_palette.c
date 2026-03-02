@@ -1,38 +1,41 @@
 #include "world_palette.h"
 #include "assets/assets.h"
 
-u32 world_palette_textocol(u32 texture)
-{
-    switch (texture) {
-        case TEXTURE_TILE_BRICKS:        return WORLD_TILE_COLOR_BLACK;
-        case TEXTURE_TILE_BRICKS_SECRET: return WORLD_TILE_COLOR_RED;
-        case TEXTURE_TILE_MARKARYAN:     return WORLD_TILE_COLOR_GREEN;
-        case TEXTURE_TILE_SAND:          return WORLD_TILE_COLOR_BLUE;
-        case TEXTURE_TILE_DOOR:          return WORLD_TILE_COLOR_YELLOW;
-        default:                         return WORLD_TILE_COLOR_EMPTY;
-    }
-}
+/* Единая таблица соответствий: цвет ↔ тип тайла ↔ текстура.
+   Добавить новый тип тайла = одна строка здесь вместо трёх switch-ей. */
+typedef struct {
+    u32 color;
+    u32 tile_type;
+    u32 texture_id;
+} WorldPaletteEntry;
 
-u32 world_palette_coltotype(u32 color) {
-    switch (color) {
-        case WORLD_TILE_COLOR_EMPTY:  return WORLD_TILE_TYPE_AIR;
-        case WORLD_TILE_COLOR_BLACK:  return WORLD_TILE_TYPE_WALL;
-        case WORLD_TILE_COLOR_RED:    return WORLD_TILE_TYPE_WALL;
-        case WORLD_TILE_COLOR_GREEN:  return WORLD_TILE_TYPE_WALL;
-        case WORLD_TILE_COLOR_BLUE:   return WORLD_TILE_TYPE_WALL;
-        case WORLD_TILE_COLOR_YELLOW: return WORLD_TILE_TYPE_DOOR;
-        default:                      return WORLD_TILE_TYPE_AIR;
-    }
+static const WorldPaletteEntry s_palette[] = {
+    { WORLD_TILE_COLOR_BLACK,  WORLD_TILE_TYPE_WALL, TEXTURE_TILE_BRICKS        },
+    { WORLD_TILE_COLOR_RED,    WORLD_TILE_TYPE_WALL, TEXTURE_TILE_BRICKS_SECRET },
+    { WORLD_TILE_COLOR_GREEN,  WORLD_TILE_TYPE_WALL, TEXTURE_TILE_MARKARYAN     },
+    { WORLD_TILE_COLOR_BLUE,   WORLD_TILE_TYPE_WALL, TEXTURE_TILE_SAND          },
+    { WORLD_TILE_COLOR_YELLOW, WORLD_TILE_TYPE_DOOR, TEXTURE_TILE_DOOR          },
+};
+
+#define PALETTE_SIZE ((u32)(sizeof(s_palette) / sizeof(s_palette[0])))
+
+u32 world_palette_coltotype(u32 color)
+{
+    for (u32 i = 0; i < PALETTE_SIZE; ++i)
+        if (s_palette[i].color == color) return s_palette[i].tile_type;
+    return WORLD_TILE_TYPE_AIR;
 }
 
 u32 world_palette_coltotex(u32 color)
 {
-    switch (color) {
-        case WORLD_TILE_COLOR_BLACK:  return TEXTURE_TILE_BRICKS;
-        case WORLD_TILE_COLOR_RED:    return TEXTURE_TILE_BRICKS_SECRET;
-        case WORLD_TILE_COLOR_GREEN:  return TEXTURE_TILE_MARKARYAN;
-        case WORLD_TILE_COLOR_BLUE:   return TEXTURE_TILE_SAND;
-        case WORLD_TILE_COLOR_YELLOW: return TEXTURE_TILE_DOOR;
-        default:                      return TEXTURE_TILE_DEFAULT;
-    }
+    for (u32 i = 0; i < PALETTE_SIZE; ++i)
+        if (s_palette[i].color == color) return s_palette[i].texture_id;
+    return TEXTURE_TILE_DEFAULT;
+}
+
+u32 world_palette_textocol(u32 texture)
+{
+    for (u32 i = 0; i < PALETTE_SIZE; ++i)
+        if (s_palette[i].texture_id == texture) return s_palette[i].color;
+    return WORLD_TILE_COLOR_EMPTY;
 }

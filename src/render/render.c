@@ -31,14 +31,12 @@ static void render_draw_wall(int x, int y1, int y2, int wall_len,
         texture = assets_get_texture(TEXTURE_MAP_TILES, TEXTURE_TILE_DEFAULT);
     }
 
-    int texture_x = (int)(ray->u * texture->w);
-    if (texture_x < 0)            texture_x = 0;
-    if (texture_x >= (int)texture->w) texture_x = (int)texture->w - 1;
+    int texture_x = (int)gmath_clamp(ray->u * texture->w, 0.0f, (float)(texture->w - 1));
 
     if ((ray->side == 1 && ray->dy > 0) || (ray->side == 0 && ray->dx < 0))
         texture_x = (int)texture->w - texture_x - 1;
 
-    float texture_shade = 1.0f / (1.5f + ray->side + ray->dist);
+    float texture_shade = 1.0f / (RENDER_SHADE_BASE + ray->side + ray->dist);
     float texture_step = (float)texture->h / wall_len;
     float texture_pos = (y1 - (float)screen_h * 0.5f + (float)wall_len * 0.5f) * texture_step;
 
@@ -75,15 +73,15 @@ static void render_draw_entities(GameState* gs, Vec2 camera_plane, float proj_di
         float inv_det = 1.0f / (camera_plane.x * dir.y - dir.x * camera_plane.y);
         float transform_x = inv_det * (d.x * dir.y - d.y * dir.x);
         float transform_y = inv_det * (-camera_plane.y * d.x + d.y * camera_plane.x);
-        if (transform_y < 0.85f * gs->zoom) continue;
+        if (transform_y < RENDER_SPRITE_CULL_DIST * gs->zoom) continue;
 
-        float shade = 1.0f / (transform_y + 1.5f);
+        float shade = 1.0f / (transform_y + RENDER_SHADE_BASE);
         float inv_ty = 1.0f / transform_y;
 
         int screen_x = (int)((gs->game_w * 0.5f) * (1.0f + transform_x * inv_ty));
-        int sprite_h = (int)fabsf(proj_dist * inv_ty * 0.9f);
+        int sprite_h = (int)fabsf(proj_dist * inv_ty * RENDER_SPRITE_HEIGHT_SCALE);
         int sprite_w = sprite_h;
-        int sprite_center = (int)(gs->game_h * 0.5f + proj_dist * inv_ty * 0.1f);
+        int sprite_center = (int)(gs->game_h * 0.5f + proj_dist * inv_ty * RENDER_SPRITE_OFFSET_SCALE);
 
         float tex_step_x = (float)texture->w / sprite_w;
         float tex_step_y = (float)texture->h / sprite_h;
@@ -111,7 +109,7 @@ static void render_draw_entities(GameState* gs, Vec2 camera_plane, float proj_di
                 u32 color = texture->pixels[tex_y * texture->w + tex_x];
 
                 if (transform_y < zbuffer[x]) {
-                    if ((color >> 24) & 0xFF)
+                    if (render_has_alpha(color))
                         render_buffer_put_pixel(x, y, render_apply_shade(color, shade));
                 }
                 tex_pos_x += tex_step_x;
@@ -160,10 +158,10 @@ void render_update(GameState* gs, int fov)
         if (y1 < 0)             y1 = 0;
         if (y2 >= (int)height)  y2 = (int)height - 1;
 
-        render_draw_plane(x, 0, y1, 0xFF000000);
+        render_draw_plane(x, 0, y1, RENDER_CEILING_COLOR);
         render_draw_wall(x, y1, y2, line_h, (int)height, &ray,
             world_tile_texture(world, ray.map_x, ray.map_y));
-        render_draw_plane(x, y2, (int)height, 0xFFAAAAAA);
+        render_draw_plane(x, y2, (int)height, RENDER_FLOOR_COLOR);
     }
 
     render_draw_entities(gs, gmath_vec2(planeX, planeY), proj_dist);
@@ -192,7 +190,7 @@ bool render_init(GameState* gs)
         float half_screen = (float)gs->game_h * 0.5f;
         for (int y = 0; y < (int)gs->game_h; ++y) {
             float dist = half_screen / (y - half_screen);
-            shade_table[y] = 1.0f / (1.5f + dist);
+            shade_table[y] = 1.0f / (RENDER_SHADE_BASE + dist);
         }
     }
     else {
@@ -275,11 +273,39 @@ void render_draw_texture(int x_start, int y_start, int w, int h,
         for (int x = x_start; x < x_start + w; ++x) {
             int tex_x = (int)gmath_clamp(tex_pos_x, 0.0f, (float)(texture->w - 1));
             u32 color = texture->pixels[tex_y * texture->w + tex_x];
-            if ((color >> 24) & 0xFF)
+            if (render_has_alpha(color))
                 render_buffer_put_pixel(x, y, color);
             tex_pos_x += tex_step_x;
         }
         tex_pos_y += tex_step_y;
+    }
+}
+
+static void render_draw_font_glyph(FontChar fc, Vec2 pos, int size,
+    u32 color, int screen_w, int screen_h)
+{
+    float font_step_x = (float)fc.w / size;
+    float font_step_y = (float)fc.h / size;
+    float font_pos_y = 0.0f;
+
+    for (int y = (int)pos.y; y < (int)pos.y + size; ++y) {
+        if (y < 0) { font_pos_y += font_step_y; continue; }
+        if (y >= screen_h) break;
+
+        int   font_y = (int)font_pos_y;
+        float font_pos_x = 0.0f;
+
+        for (int x = (int)pos.x; x < (int)pos.x + size; ++x) {
+            if (x < 0) { font_pos_x += font_step_x; continue; }
+            if (x >= screen_w) break;
+
+            int font_x = (int)font_pos_x;
+            u32 pixel = fc.pixels[font_y * fc.stride + font_x];
+            if (render_has_alpha(pixel))
+                render_buffer_put_pixel(x, y, color);
+            font_pos_x += font_step_x;
+        }
+        font_pos_y += font_step_y;
     }
 }
 
@@ -307,29 +333,7 @@ void render_draw_font(Vec2 start, int screen_w, int screen_h,
             continue;
         }
 
-        float font_step_x = (float)fc.w / size;
-        float font_step_y = (float)fc.h / size;
-        float font_pos_y = 0.0f;
-
-        for (int y = (int)start.y; y < (int)start.y + size; ++y) {
-            if (y < 0) { font_pos_y += font_step_y; continue; }
-            if (y >= screen_h)  break;
-
-            int   font_y = (int)font_pos_y;
-            float font_pos_x = 0.0f;
-
-            for (int x = (int)start.x; x < (int)start.x + size; ++x) {
-                if (x < 0) { font_pos_x += font_step_x; continue; }
-                if (x >= screen_w) break;
-
-                int font_x = (int)font_pos_x;
-                u32 pixel = fc.pixels[font_y * fc.stride + font_x];
-                if ((pixel >> 24) & 0xFF)
-                    render_buffer_put_pixel(x, y, color);
-                font_pos_x += font_step_x;
-            }
-            font_pos_y += font_step_y;
-        }
+        render_draw_font_glyph(fc, start, size, color, screen_w, screen_h);
 
         str++;
         start.x += size;

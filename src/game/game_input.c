@@ -3,6 +3,8 @@
 #include "core/input.h"
 #include "core/player.h"
 
+#define GAME_MOUSE_SENSITIVITY 0.0015f
+
 static SDL_AppResult game_handle_keyboard_event(const SDL_KeyboardEvent *key_event, GameState *gs)
 {
     if (key_event->key == SDLK_ESCAPE && (!key_event->down))
@@ -66,7 +68,7 @@ static void game_handle_focus_gained(GameState* gs)
 
 static void game_handle_mouse_motion(const SDL_MouseMotionEvent* mm_event, Player *player)
 {
-    player->angle += mm_event->xrel * 0.0015f;
+    player->angle += mm_event->xrel * GAME_MOUSE_SENSITIVITY;
 }
 
 SDL_AppResult game_handle_event(SDL_Event *event, GameState *gs)

@@ -10,8 +10,7 @@ static void entity_update(Entity* entity, Player* player, float dt)
 	if (!entity) return;
 	if (!entity->is_alive) return;
 
-	if (entity->angle < 0) entity->angle += 2 * MATH_PI;
-	if (entity->angle >= 2 * MATH_PI) entity->angle -= 2 * MATH_PI;
+	entity->angle = gmath_normalize_angle(entity->angle);
 
 	Vec2 dir = gmath_direction(entity->angle);
 	Vec2 to_player = gmath_vec2_norm(

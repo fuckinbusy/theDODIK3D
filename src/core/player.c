@@ -49,8 +49,7 @@ void player_update(GameState* gs, float dt)
         player->angle -= player->rot_velocity * dt;
     }
     
-    if (player->angle < 0) player->angle += 2 * MATH_PI;
-    if (player->angle >= 2 * MATH_PI) player->angle -= 2 * MATH_PI;
+    player->angle = gmath_normalize_angle(player->angle);
     
     Vec2 d = gmath_direction(player->angle);
 
